@@ -65,6 +65,8 @@ function App() {
                 <MenuItem value={'tinkoff'}>Тинькофф</MenuItem>
                 <MenuItem value={'gtts'}>gtts</MenuItem>
                 <MenuItem value={'macos'}>MacOS</MenuItem>
+                <MenuItem value={'espeak'}>ESpeak</MenuItem>
+                <MenuItem value={'tts'}>TTS</MenuItem>
             </Select>
             <Button variant="outlined" onClick={() => {
                 handleClick(text, voice)
