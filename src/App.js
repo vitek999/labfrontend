@@ -7,6 +7,7 @@ function App() {
     const [files, setFiles] = useState([])
     const audioRef = useRef(null);
     const [voice, setVoice] = useState(0)
+    const [type, setType] = useState('gtts')
 
     const handlePlay = (fileName) => {
         console.log(fileName)
@@ -19,12 +20,16 @@ function App() {
     }
 
     const handleClick = async (text, voice_index) => {
-        await fetch(`http://127.0.0.1:8000/tinkoff-text-to-speech?text=${text}&voice_index=${voice_index}`)
+        await fetch(`http://127.0.0.1:8000/text-to-speech?text=${text}&voice_index=${voice_index}&type=${type}`)
         await fetchFiles()
     }
 
     const handleVoiceChange = (event) => {
         setVoice(event.target.value);
+    }
+
+    const handleTypeChange = (event) => {
+        setType(event.target.value);
     }
 
     const fetchFiles = async () => {
@@ -51,6 +56,14 @@ function App() {
                 <MenuItem value={0}>Алёна</MenuItem>
                 <MenuItem value={1}>Максим</MenuItem>
                 <MenuItem value={2}>Флирт</MenuItem>
+            </Select>
+            <Select
+                value={type}
+                onChange={handleTypeChange}
+                label='Voice'
+            >
+                <MenuItem value={'tinkoff'}>Тинькофф</MenuItem>
+                <MenuItem value={'gtts'}>gtts</MenuItem>
             </Select>
             <Button variant="outlined" onClick={() => {
                 handleClick(text, voice)
