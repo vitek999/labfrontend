@@ -1,13 +1,28 @@
 import './App.css';
-import {TextField, Button, Select, SelectChangeEvent, MenuItem} from '@mui/material';
+import {
+    TextField,
+    Button,
+    Select,
+    SelectChangeEvent,
+    MenuItem,
+    Divider,
+    Box,
+    LinearProgress,
+    createTheme, ThemeProvider, styled, linearProgressClasses
+} from '@mui/material';
 import {useEffect, useState, useRef} from 'react';
+import {blue, red, yellow} from "@mui/material/colors";
 
 function App() {
     const [text, setText] = useState('')
     const [files, setFiles] = useState([])
+    const [latestFile, setLatestFile] = useState(null);
     const audioRef = useRef(null);
     const [voice, setVoice] = useState(0)
     const [type, setType] = useState('gtts')
+
+    const [isProgressList, setProgressList] = useState(false)
+    const [isProgressOneItem, setProgressOneItem] = useState(false)
 
     const handlePlay = (fileName) => {
         console.log(fileName)
@@ -20,8 +35,11 @@ function App() {
     }
 
     const handleClick = async (text, voice_index) => {
+        setProgressList(true)
+        setProgressOneItem(true)
         await fetch(`http://127.0.0.1:8000/text-to-speech?text=${text}&voice_index=${voice_index}&type=${type}`)
         await fetchFiles()
+        await fetchLatestGeneratedFile()
     }
 
     const handleVoiceChange = (event) => {
@@ -37,10 +55,22 @@ function App() {
         const decoded = await response.json()
         console.log(decoded)
         setFiles(decoded)
+        setProgressList(false)
+    }
+
+    const fetchLatestGeneratedFile = async () => {
+        const response = await fetch('http://127.0.0.1:8000/latest_generated_audio')
+        const decoded = await response.text();
+        console.log("latest: " + decoded)
+        setLatestFile(decoded)
+        setProgressOneItem(false)
     }
 
     useEffect(() => {
+        setProgressList(true)
+        setProgressOneItem(true)
         fetchFiles()
+        fetchLatestGeneratedFile()
     }, [])
 
     return (
@@ -71,9 +101,49 @@ function App() {
             <Button variant="outlined" onClick={() => {
                 handleClick(text, voice)
             }}>Создать</Button>
-            <FilesList files={files} handlePlay={handlePlay}/>
+            <Divider style={{marginTop: 10}}/>
+
+            {isProgressOneItem ? <LinearIndeterminate color={'primary'}/> :
+                <LatestFile latestFile={latestFile} handlePlay={handlePlay}/>}
+
+
+            <Divider/>
+
+            {/*{isProgressList ? <LinearIndeterminate color={'secondary'}/> :*/}
+            {/*    <FilesList files={files} handlePlay={handlePlay}/>}*/}
         </div>
     );
+}
+
+
+const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+  height: 10,
+  borderRadius: 5,
+  [`&.${linearProgressClasses.colorPrimary}`]: {
+    backgroundColor: theme.palette.grey[theme.palette.mode === 'light' ? 200 : 800],
+  },
+  [`& .${linearProgressClasses.bar}`]: {
+    borderRadius: 5,
+    backgroundColor: theme.palette.mode === 'light' ? '#1a90ff' : '#308fe8',
+  },
+}));
+const LinearIndeterminate = (props) => {
+    return (
+        <Box sx={{width: '100%'}}>
+            <BorderLinearProgress size={80} thickness={100} color={props.color}/>
+        </Box>
+    );
+}
+
+const LatestFile = (props) => {
+    return <div style={{marginLeft: 40}}>
+        {props.latestFile}
+        <Button onClick={() => {
+            props.handlePlay(props.latestFile)
+        }}>
+            play
+        </Button>
+    </div>
 }
 
 const FilesList = (props) => {
